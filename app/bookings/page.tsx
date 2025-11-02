@@ -14,12 +14,12 @@ import Image from 'next/image'
 
 interface Booking {
   id: string
-  status: string
+  status: string | null
   start_date: string
   end_date: string
   total_amount: number
   message: string | null
-  created_at: string
+  created_at: string | null
   property: {
     id: string
     title: string
@@ -91,7 +91,8 @@ export default function MyBookingsPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
+    if (!status) return 'bg-gray-100 text-gray-700'
     switch (status) {
       case 'confirmed':
         return 'bg-green-100 text-green-700'
@@ -104,7 +105,8 @@ export default function MyBookingsPage() {
     }
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string | null) => {
+    if (!status) return <Clock className="w-5 h-5" />
     switch (status) {
       case 'confirmed':
         return <CheckCircle className="w-5 h-5" />
@@ -158,7 +160,7 @@ export default function MyBookingsPage() {
               <div>
                 <p className="text-gray-600 text-sm">Pending</p>
                 <p className="text-3xl font-bold text-yellow-600 mt-2">
-                  {bookings.filter(b => b.status === 'pending').length}
+                  {bookings.filter(b => b.status === 'pending' || !b.status).length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -246,7 +248,7 @@ export default function MyBookingsPage() {
                       </div>
                       <span className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                         {getStatusIcon(booking.status)}
-                        <span className="capitalize">{booking.status}</span>
+                        <span className="capitalize">{booking.status || 'pending'}</span>
                       </span>
                     </div>
 
@@ -277,7 +279,7 @@ export default function MyBookingsPage() {
                         <Clock className="w-5 h-5 mr-2 text-primary-600" />
                         <div>
                           <p className="text-xs text-gray-500">Booked on</p>
-                          <p className="font-medium">{new Date(booking.created_at).toLocaleDateString()}</p>
+                          <p className="font-medium">{booking.created_at ? new Date(booking.created_at).toLocaleDateString() : 'N/A'}</p>
                         </div>
                       </div>
                     </div>

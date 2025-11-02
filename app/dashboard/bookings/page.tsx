@@ -15,12 +15,12 @@ import Image from 'next/image'
 
 interface Booking {
   id: string
-  status: string
+  status: string | null
   start_date: string
   end_date: string
   total_amount: number
   message: string | null
-  created_at: string
+  created_at: string | null
   property: {
     id: string
     title: string
@@ -185,7 +185,8 @@ export default function ProviderBookingsPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
+    if (!status) return 'bg-gray-100 text-gray-700'
     switch (status) {
       case 'confirmed':
         return 'bg-green-100 text-green-700'
@@ -198,7 +199,8 @@ export default function ProviderBookingsPage() {
     }
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string | null) => {
+    if (!status) return <Clock className="w-5 h-5" />
     switch (status) {
       case 'confirmed':
         return <CheckCircle className="w-5 h-5" />
@@ -284,7 +286,7 @@ export default function ProviderBookingsPage() {
               <div>
                 <p className="text-gray-600 text-sm font-medium">Pending</p>
                 <p className="text-4xl font-bold text-yellow-600 mt-2">
-                  {bookings.filter(b => b.status === 'pending').length}
+                  {bookings.filter(b => b.status === 'pending' || !b.status).length}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Awaiting response</p>
               </div>
@@ -395,7 +397,7 @@ export default function ProviderBookingsPage() {
                       </div>
                       <span className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                         {getStatusIcon(booking.status)}
-                        <span className="capitalize">{booking.status}</span>
+                        <span className="capitalize">{booking.status || 'pending'}</span>
                       </span>
                     </div>
 
@@ -437,7 +439,7 @@ export default function ProviderBookingsPage() {
                     )}
 
                     {/* Action Buttons */}
-                    {booking.status === 'pending' && (
+                    {(booking.status === 'pending' || !booking.status) && (
                       <div className="flex space-x-3 pt-4 border-t border-gray-200">
                         <button
                           onClick={() => handleStatusUpdate(booking.id, 'confirmed')}
