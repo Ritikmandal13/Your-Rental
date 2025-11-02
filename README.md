@@ -14,7 +14,8 @@ A fully functional, modern rental service website built with Next.js, TypeScript
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 15 (App Router)
+- **Database**: Supabase (PostgreSQL)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
@@ -39,7 +40,15 @@ A fully functional, modern rental service website built with Next.js, TypeScript
    pnpm install
    ```
 
-3. **Run the development server**
+3. **Configure environment variables**
+   - Create a `.env.local` file in the root directory
+   - Add your Supabase credentials:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+4. **Run the development server**
    ```bash
    npm run dev
    # or
@@ -48,7 +57,7 @@ A fully functional, modern rental service website built with Next.js, TypeScript
    pnpm dev
    ```
 
-4. **Open your browser**
+5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
 
 ## 🏗️ Project Structure
@@ -66,10 +75,15 @@ your-rental-service/
 │   ├── FeaturedProperties.tsx # Featured properties section
 │   ├── Services.tsx         # Services showcase
 │   └── Footer.tsx           # Footer component
+├── lib/
+│   └── supabase.ts         # Supabase client configuration
+├── types/
+│   └── database.types.ts   # Auto-generated TypeScript types
 ├── public/                  # Static assets
 ├── package.json
 ├── tailwind.config.js
 ├── next.config.js
+├── .env.local               # Environment variables (not in git)
 └── README.md
 ```
 
@@ -159,9 +173,15 @@ colors: {
 ```
 
 ### Content
-- Update property data in `FeaturedProperties.tsx`
+- Property data is stored in Supabase database
 - Modify services in `Services.tsx`
 - Customize footer links in `Footer.tsx`
+
+### Database
+Properties are stored in Supabase. To manage data:
+1. Access your Supabase dashboard
+2. Navigate to the Table Editor
+3. Manage properties in the `properties` table
 
 ### Styling
 - Modify global styles in `app/globals.css`

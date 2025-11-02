@@ -2,7 +2,16 @@
 const nextConfig = {
   outputFileTracingRoot: __dirname,
   images: {
-    domains: ['images.unsplash.com', 'via.placeholder.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'gmnfsaykorpqtsprggpc.supabase.co',
+      },
+    ],
   },
 }
 

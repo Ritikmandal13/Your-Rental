@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Search, MapPin, Building, Home, Users, Filter, ChevronDown, GraduationCap, Briefcase, Heart, Music, BookOpen, Gamepad2, Utensils, Car, Plane, Camera, Palette, Dumbbell, Coffee } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function Hero() {
+  const router = useRouter()
   const [searchType, setSearchType] = useState('rent')
   const [location, setLocation] = useState('')
   const [propertyType, setPropertyType] = useState('')
@@ -127,19 +129,28 @@ export default function Hero() {
   }
 
   const handleSearch = () => {
-    // Here you would implement the actual search logic
-    console.log('Searching with filters:', {
-      searchType,
-      location,
-      propertyType,
-      budget,
-      selectedDomains,
-      lifestyle,
-      occupation,
-      ageGroup,
-      gender,
-      amenities
-    })
+    // Build query parameters from filters
+    const params = new URLSearchParams()
+    
+    // Map search type to property types
+    // Only apply searchType if propertyType is not manually selected
+    if (!propertyType) {
+      if (searchType === 'commercial') {
+        params.set('propertyType', 'Commercial')
+      } else if (searchType === 'pg') {
+        params.set('propertyType', 'PG/Co-Living')
+      }
+    } else {
+      // If user manually selected a property type, use that instead
+      params.set('propertyType', propertyType)
+    }
+    
+    if (location) params.set('location', location)
+    if (budget) params.set('budget', budget)
+    
+    // Navigate to properties page with filters
+    const queryString = params.toString()
+    router.push(`/properties${queryString ? `?${queryString}` : ''}`)
   }
 
   return (
@@ -207,38 +218,40 @@ export default function Hero() {
                   placeholder="Enter location"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
+                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
                 />
               </div>
 
               {/* Property Type */}
               <div className="relative">
-                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none z-10" />
                 <select
                   value={propertyType}
                   onChange={(e) => setPropertyType(e.target.value)}
-                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none bg-white text-sm sm:text-base"
+                  className="w-full pl-9 sm:pl-10 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900 text-sm sm:text-base cursor-pointer appearance-none"
                 >
                   <option value="">Property Type</option>
                   {propertyTypes.map((type) => (
                     <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none z-10" />
               </div>
 
               {/* Budget Range */}
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm sm:text-base">₹</span>
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm sm:text-base pointer-events-none z-10">₹</span>
                 <select 
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
-                  className="w-full pl-7 sm:pl-8 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none bg-white text-sm sm:text-base"
+                  className="w-full pl-7 sm:pl-8 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900 text-sm sm:text-base cursor-pointer appearance-none"
                 >
                   <option value="">Budget</option>
                   {budgetRanges.map((range) => (
                     <option key={range.value} value={range.value}>{range.label}</option>
                   ))}
                 </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none z-10" />
               </div>
 
               {/* Advanced Filters Toggle */}
@@ -291,60 +304,64 @@ export default function Hero() {
 
                   {/* Lifestyle & Demographics */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
+                    <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Lifestyle</label>
                       <select
                         value={lifestyle}
                         onChange={(e) => setLifestyle(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                        className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-sm cursor-pointer appearance-none"
                       >
                         <option value="">Any Lifestyle</option>
                         {lifestyleOptions.map((option) => (
                           <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
                       </select>
+                      <ChevronDown className="absolute right-2 bottom-2.5 text-gray-400 w-4 h-4 pointer-events-none z-10" />
                     </div>
 
-                    <div>
+                    <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Occupation</label>
                       <select
                         value={occupation}
                         onChange={(e) => setOccupation(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                        className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-sm cursor-pointer appearance-none"
                       >
                         <option value="">Any Occupation</option>
                         {occupationOptions.map((option) => (
                           <option key={option} value={option}>{option}</option>
                         ))}
                       </select>
+                      <ChevronDown className="absolute right-2 bottom-2.5 text-gray-400 w-4 h-4 pointer-events-none z-10" />
                     </div>
 
-                    <div>
+                    <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Age Group</label>
                       <select
                         value={ageGroup}
                         onChange={(e) => setAgeGroup(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                        className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-sm cursor-pointer appearance-none"
                       >
                         <option value="">Any Age</option>
                         {ageGroups.map((option) => (
                           <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
                       </select>
+                      <ChevronDown className="absolute right-2 bottom-2.5 text-gray-400 w-4 h-4 pointer-events-none z-10" />
                     </div>
 
-                    <div>
+                    <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Gender Preference</label>
                       <select
                         value={gender}
                         onChange={(e) => setGender(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                        className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-sm cursor-pointer appearance-none"
                       >
                         <option value="">Any Gender</option>
                         {genderOptions.map((option) => (
                           <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
                       </select>
+                      <ChevronDown className="absolute right-2 bottom-2.5 text-gray-400 w-4 h-4 pointer-events-none z-10" />
                     </div>
                   </div>
 

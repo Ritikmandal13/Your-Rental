@@ -1,22 +1,9 @@
-import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({ subsets: ['latin'] })
-
-export const metadata: Metadata = {
-  title: 'Your Rental Service - Find Your Perfect Home',
-  description: 'Discover the best rental properties in your area. Browse apartments, houses, and commercial spaces with detailed information and virtual tours.',
-  keywords: 'rental, real estate, apartments, houses, property, rent',
-  authors: [{ name: 'Your Rental Service' }],
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-}
 
 export default function RootLayout({
   children,
@@ -24,9 +11,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Toaster 
           position="top-right"
           toastOptions={{
