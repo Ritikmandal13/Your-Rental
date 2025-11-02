@@ -9,6 +9,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
 import { ArrowLeft, MapPin, Bed, Bath, Square, Star, Phone, MessageCircle, Calendar, User, Loader2, Edit } from 'lucide-react'
+import { getBookingNotificationEmailForProvider } from '@/lib/email-templates'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 
@@ -185,6 +186,44 @@ export default function PropertyDetailsPage() {
         })
 
       if (error) throw error
+
+      // Send email notification to rental provider
+      try {
+        const { data: providerData } = await supabase
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', property.rent_provider_id)
+          .single()
+
+        if (providerData?.email) {
+          const emailContent = getBookingNotificationEmailForProvider({
+            propertyTitle: property.title,
+            propertyLocation: property.location,
+            userName: profile?.full_name || user.email || 'Guest User',
+            userEmail: user.email || '',
+            startDate: bookingStartDate,
+            endDate: bookingEndDate,
+            totalAmount,
+            message: bookingMessage || null,
+            appUrl: process.env.NEXT_PUBLIC_APP_URL || window.location.origin,
+          })
+
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: providerData.email,
+              subject: emailContent.subject,
+              html: emailContent.html,
+            }),
+          })
+        }
+      } catch (emailError) {
+        // Log error but don't fail the booking
+        console.error('Failed to send email notification:', emailError)
+      }
 
       toast.success('Booking request submitted successfully!')
       setShowBookingForm(false)

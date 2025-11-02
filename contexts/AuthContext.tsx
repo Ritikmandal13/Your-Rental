@@ -100,8 +100,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     })
 
-    // Trigger handle_new_user will automatically create profile with role
-    return { error }
+    if (error) {
+      return { error }
+    }
+
+    // If signup successful, try to create profile manually (in case trigger fails)
+    if (data?.user) {
+      try {
+        // Wait a bit for the trigger to execute
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Check if profile exists
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .single()
+
+        // If profile doesn't exist, create it manually
+        if (!existingProfile) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: email,
+              full_name: fullName,
+              role: role,
+            })
+
+          if (profileError) {
+            console.error('Error creating profile:', profileError)
+            // Return the profile error if it's critical
+            return { 
+              error: { 
+                message: `Account created but profile setup failed: ${profileError.message}. Please contact support.` 
+              } 
+            }
+          }
+        }
+      } catch (profileErr: any) {
+        console.error('Error in profile creation:', profileErr)
+        // Don't fail the signup if profile creation has issues
+        // The user can still use the account
+      }
+    }
+
+    return { error: null }
   }
 
   const signOut = async () => {

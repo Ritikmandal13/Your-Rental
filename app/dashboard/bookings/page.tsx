@@ -9,6 +9,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
 import { Calendar, Clock, MapPin, CheckCircle, XCircle, Loader2, Package, User, Mail, Phone, MessageSquare } from 'lucide-react'
+import { getBookingConfirmationEmailForUser } from '@/lib/email-templates'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 
@@ -109,12 +110,65 @@ export default function ProviderBookingsPage() {
     setUpdatingBooking(bookingId)
 
     try {
+      // Fetch booking details before updating
+      const { data: bookingData, error: fetchError } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          property:properties!bookings_property_id_fkey(
+            id,
+            title,
+            location
+          ),
+          user_profile:profiles!bookings_user_id_fkey(
+            email,
+            full_name
+          ),
+          provider_profile:profiles!bookings_rent_provider_id_fkey(
+            full_name
+          )
+        `)
+        .eq('id', bookingId)
+        .single()
+
+      if (fetchError) throw fetchError
+
       const { error } = await supabase
         .from('bookings')
         .update({ status: newStatus })
         .eq('id', bookingId)
 
       if (error) throw error
+
+      // Send confirmation email to user if booking is confirmed
+      if (newStatus === 'confirmed' && bookingData?.user_profile?.email) {
+        try {
+          const emailContent = getBookingConfirmationEmailForUser({
+            propertyTitle: bookingData.property?.title || 'Property',
+            propertyLocation: bookingData.property?.location || '',
+            providerName: bookingData.provider_profile?.full_name || 'Property Owner',
+            startDate: bookingData.start_date,
+            endDate: bookingData.end_date,
+            totalAmount: bookingData.total_amount,
+            appUrl: process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'),
+          })
+
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: bookingData.user_profile.email,
+              subject: emailContent.subject,
+              html: emailContent.html,
+            }),
+          })
+        } catch (emailError) {
+          // Log error but don't fail the status update
+          console.error('Failed to send confirmation email:', emailError)
+        }
+      }
 
       toast.success(`Booking ${newStatus === 'confirmed' ? 'confirmed' : 'cancelled'} successfully!`)
       fetchBookings()

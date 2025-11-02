@@ -48,8 +48,12 @@ export default function LoginPage() {
         }
         const { error } = await signUp(email, password, fullName, userType)
         if (error) {
-          toast.error(error.message || 'Failed to sign up', {
+          // Show more detailed error message
+          const errorMessage = error.message || 'Failed to sign up'
+          console.error('Signup error:', error)
+          toast.error(errorMessage, {
             icon: '❌',
+            duration: 5000,
           })
         } else {
           toast.success(

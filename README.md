@@ -22,6 +22,7 @@ A fully functional, modern rental service website built with Next.js, TypeScript
 - **Animations**: Framer Motion
 - **Forms**: React Hook Form
 - **Notifications**: React Hot Toast
+- **Email Service**: Resend
 
 ## 📦 Installation
 
@@ -42,11 +43,19 @@ A fully functional, modern rental service website built with Next.js, TypeScript
 
 3. **Configure environment variables**
    - Create a `.env.local` file in the root directory
-   - Add your Supabase credentials:
+   - Copy `.env.example` to `.env.local` and fill in your credentials:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   RESEND_API_KEY=your_resend_api_key
+   RESEND_FROM_EMAIL=Your Rental Service <noreply@yourdomain.com>
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
+   
+   **Email Setup (Resend):**
+   - Sign up for a free account at [Resend](https://resend.com)
+   - Get your API key from the Resend dashboard
+   - Set your `RESEND_FROM_EMAIL` (must be a verified domain in Resend for production, or use `onboarding@resend.dev` for testing)
 
 4. **Run the development server**
    ```bash
@@ -143,6 +152,11 @@ your-rental-service/
 - Responsive design for all devices
 - Interactive elements
 - Modern UI components
+
+### Email Notifications
+- Automatic email notifications when bookings are created
+- Confirmation emails when bookings are accepted
+- Professional HTML email templates
 
 ## 🚀 Deployment
 
