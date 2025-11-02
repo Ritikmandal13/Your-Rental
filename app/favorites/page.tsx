@@ -54,7 +54,7 @@ export default function FavoritesPage() {
 
     try {
       const { data, error } = await supabase
-        .from('favorites')
+        .from('favorites' as any)
         .select(`
           property_id,
           properties (
@@ -78,7 +78,7 @@ export default function FavoritesPage() {
       if (error) throw error
 
       // Transform data to match PropertyCard interface
-      const formattedProperties = data.map((item: any) => ({
+      const formattedProperties = (data as unknown as any[]).map((item: any) => ({
         id: item.properties.id,
         title: item.properties.title,
         location: item.properties.location,
@@ -108,7 +108,7 @@ export default function FavoritesPage() {
 
     try {
       const { error } = await supabase
-        .from('favorites')
+        .from('favorites' as any)
         .delete()
         .eq('user_id', user.id)
         .eq('property_id', propertyId)

@@ -10,8 +10,10 @@ interface Profile {
   email: string | null
   full_name: string | null
   phone: string | null
-  role: 'user' | 'rent_provider'
+  role: 'user' | 'rent_provider' | null
   avatar_url: string | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 interface AuthContextType {
@@ -130,12 +132,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (profileError) {
             console.error('Error creating profile:', profileError)
-            // Return the profile error if it's critical
-            return { 
-              error: { 
-                message: `Account created but profile setup failed: ${profileError.message}. Please contact support.` 
-              } 
-            }
+            // Log but don't fail signup - user account is created
+            // Return a generic AuthError
+            const authError = new Error(`Account created but profile setup failed: ${profileError.message}. Please contact support.`) as AuthError
+            return { error: authError }
           }
         }
       } catch (profileErr: any) {

@@ -47,13 +47,13 @@ export default function NotificationsPage() {
 
     try {
       const { data, error } = await supabase
-        .from('notifications')
+        .from('notifications' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setNotifications(data || [])
+      setNotifications((data as unknown as Notification[]) || [])
     } catch (error: any) {
       console.error('Error fetching notifications:', error)
       toast.error('Failed to load notifications')
@@ -65,7 +65,7 @@ export default function NotificationsPage() {
   const markAsRead = async (notificationId: string) => {
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from('notifications' as any)
         .update({ is_read: true })
         .eq('id', notificationId)
 
@@ -81,7 +81,7 @@ export default function NotificationsPage() {
 
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from('notifications' as any)
         .update({ is_read: true })
         .eq('user_id', user.id)
         .eq('is_read', false)

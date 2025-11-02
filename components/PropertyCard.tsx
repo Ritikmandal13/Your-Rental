@@ -54,7 +54,7 @@ export default function PropertyCard({
     
     try {
       const { data, error } = await supabase
-        .from('favorites')
+        .from('favorites' as any)
         .select('id')
         .eq('user_id', user.id)
         .eq('property_id', id)
@@ -81,7 +81,7 @@ export default function PropertyCard({
       if (isLiked) {
         // Remove from favorites
         const { error } = await supabase
-          .from('favorites')
+          .from('favorites' as any)
           .delete()
           .eq('user_id', user.id)
           .eq('property_id', id)
@@ -92,7 +92,7 @@ export default function PropertyCard({
       } else {
         // Add to favorites
         const { error } = await supabase
-          .from('favorites')
+          .from('favorites' as any)
           .insert({
             user_id: user.id,
             property_id: id,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
@@ -25,7 +25,7 @@ interface Property {
   contactPhone?: string
 }
 
-export default function AllPropertiesPage() {
+function AllPropertiesContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [properties, setProperties] = useState<Property[]>([])
@@ -191,6 +191,25 @@ export default function AllPropertiesPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function AllPropertiesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-12">
+          <div className="text-center py-12">
+            <Loader2 className="h-12 w-12 text-primary-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading properties...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    }>
+      <AllPropertiesContent />
+    </Suspense>
   )
 }
 

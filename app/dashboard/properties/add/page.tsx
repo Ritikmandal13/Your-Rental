@@ -214,7 +214,7 @@ export default function AddPropertyPage() {
       }))
 
       const { error: imagesError } = await supabase
-        .from('property_images')
+        .from('property_images' as any)
         .insert(propertyImages)
 
       if (imagesError) throw imagesError

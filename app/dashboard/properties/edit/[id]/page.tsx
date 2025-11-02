@@ -41,7 +41,7 @@ export default function EditPropertyPage() {
   const { user } = useAuth()
   const router = useRouter()
   const params = useParams()
-  const propertyId = params.id as string
+  const propertyId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : undefined
 
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
@@ -67,14 +67,16 @@ export default function EditPropertyPage() {
   const [originalImageUrl, setOriginalImageUrl] = useState<string>('')
 
   useEffect(() => {
-    if (propertyId) {
+    if (propertyId && typeof propertyId === 'string') {
       fetchProperty()
     }
   }, [propertyId, user])
 
   const fetchProperty = async () => {
-    if (!user?.id) {
-      router.push('/dashboard/properties')
+    if (!user?.id || !propertyId || typeof propertyId !== 'string') {
+      if (!user?.id) {
+        router.push('/dashboard/properties')
+      }
       return
     }
 
@@ -189,6 +191,11 @@ export default function EditPropertyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!propertyId || typeof propertyId !== 'string') {
+      toast.error('Invalid property ID')
+      return
+    }
     
     setLoading(true)
 

@@ -18,7 +18,8 @@ interface Property {
 }
 
 export default function ReviewPage() {
-  const { id } = useParams()
+  const params = useParams()
+  const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : undefined
   const router = useRouter()
   const { user, profile } = useAuth()
   const [property, setProperty] = useState<Property | null>(null)
@@ -41,12 +42,14 @@ export default function ReviewPage() {
       return
     }
 
-    if (id) {
+    if (id && typeof id === 'string') {
       fetchProperty()
     }
   }, [id, user, profile, router])
 
   const fetchProperty = async () => {
+    if (!id || typeof id !== 'string') return
+    
     try {
       const { data, error } = await supabase
         .from('properties')
@@ -91,6 +94,10 @@ export default function ReviewPage() {
     e.preventDefault()
 
     if (!user || profile?.role === 'rent_provider') return
+    if (!id || typeof id !== 'string') {
+      toast.error('Invalid property ID')
+      return
+    }
     if (rating === 0) {
       toast.error('Please select a rating')
       return

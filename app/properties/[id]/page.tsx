@@ -28,8 +28,8 @@ interface Property {
   is_verified: boolean | null
   availability_status: string | null
   contact_phone: string | null
-  rent_provider_id: string
-  created_at: string
+  rent_provider_id: string | null
+  created_at: string | null
 }
 
 interface PropertyImage {
@@ -40,9 +40,13 @@ interface PropertyImage {
 
 interface Review {
   id: string
+  property_id: string
+  user_id: string
   rating: number
   comment: string | null
-  created_at: string
+  created_at: string | null
+  booking_id: string | null
+  updated_at: string | null
   user_profile: {
     full_name: string | null
     avatar_url: string | null
@@ -50,7 +54,8 @@ interface Review {
 }
 
 export default function PropertyDetailsPage() {
-  const { id } = useParams()
+  const params = useParams()
+  const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : undefined
   const router = useRouter()
   const { user, profile } = useAuth()
   const [property, setProperty] = useState<Property | null>(null)
@@ -67,13 +72,15 @@ export default function PropertyDetailsPage() {
   const [providerInfo, setProviderInfo] = useState<{ full_name: string | null; email: string | null }>({ full_name: null, email: null })
 
   useEffect(() => {
-    if (id) {
+    if (id && typeof id === 'string') {
       fetchProperty()
       fetchReviews()
     }
   }, [id])
 
   const fetchProperty = async () => {
+    if (!id || typeof id !== 'string') return
+    
     try {
       const { data, error } = await supabase
         .from('properties')
@@ -92,25 +99,27 @@ export default function PropertyDetailsPage() {
       setProperty(data)
 
       // Fetch provider info
-      const { data: providerData, error: providerError } = await supabase
-        .from('profiles')
-        .select('full_name, email')
-        .eq('id', data.rent_provider_id)
-        .single()
+      if (data.rent_provider_id) {
+        const { data: providerData, error: providerError } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', data.rent_provider_id)
+          .single()
 
-      if (!providerError && providerData) {
-        setProviderInfo(providerData)
+        if (!providerError && providerData) {
+          setProviderInfo(providerData)
+        }
       }
 
       // Fetch property images
       const { data: imagesData, error: imagesError } = await supabase
-        .from('property_images')
+        .from('property_images' as any)
         .select('*')
         .eq('property_id', id)
         .order('display_order', { ascending: true })
 
       if (!imagesError && imagesData) {
-        setPropertyImages(imagesData)
+        setPropertyImages(imagesData as unknown as PropertyImage[])
       }
     } catch (error: any) {
       toast.error('Failed to fetch property details')
@@ -122,6 +131,8 @@ export default function PropertyDetailsPage() {
   }
 
   const fetchReviews = async () => {
+    if (!id || typeof id !== 'string') return
+    
     try {
       const { data, error } = await supabase
         .from('reviews')
@@ -133,7 +144,7 @@ export default function PropertyDetailsPage() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setReviews(data || [])
+      setReviews((data as unknown as Review[]) || [])
     } catch (error: any) {
       console.error('Error fetching reviews:', error)
     } finally {
@@ -177,7 +188,7 @@ export default function PropertyDetailsPage() {
         .insert({
           property_id: property.id,
           user_id: user.id,
-          rent_provider_id: property.rent_provider_id,
+          rent_provider_id: property.rent_provider_id || user?.id || '', // Fallback if null
           start_date: bookingStartDate,
           end_date: bookingEndDate,
           total_amount: totalAmount,
@@ -189,36 +200,38 @@ export default function PropertyDetailsPage() {
 
       // Send email notification to rental provider
       try {
-        const { data: providerData } = await supabase
-          .from('profiles')
-          .select('email, full_name')
-          .eq('id', property.rent_provider_id)
-          .single()
+        if (property.rent_provider_id) {
+          const { data: providerData } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', property.rent_provider_id)
+            .single()
 
-        if (providerData?.email) {
-          const emailContent = getBookingNotificationEmailForProvider({
-            propertyTitle: property.title,
-            propertyLocation: property.location,
-            userName: profile?.full_name || user.email || 'Guest User',
-            userEmail: user.email || '',
-            startDate: bookingStartDate,
-            endDate: bookingEndDate,
-            totalAmount,
-            message: bookingMessage || null,
-            appUrl: process.env.NEXT_PUBLIC_APP_URL || window.location.origin,
-          })
+          if (providerData?.email) {
+            const emailContent = getBookingNotificationEmailForProvider({
+              propertyTitle: property.title,
+              propertyLocation: property.location,
+              userName: profile?.full_name || user.email || 'Guest User',
+              userEmail: user.email || '',
+              startDate: bookingStartDate,
+              endDate: bookingEndDate,
+              totalAmount,
+              message: bookingMessage || null,
+              appUrl: process.env.NEXT_PUBLIC_APP_URL || window.location.origin,
+            })
 
-          await fetch('/api/send-email', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              to: providerData.email,
-              subject: emailContent.subject,
-              html: emailContent.html,
-            }),
-          })
+            await fetch('/api/send-email', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                to: providerData.email,
+                subject: emailContent.subject,
+                html: emailContent.html,
+              }),
+            })
+          }
         }
       } catch (emailError) {
         // Log error but don't fail the booking
@@ -255,7 +268,7 @@ export default function PropertyDetailsPage() {
 
   if (!property) return null
 
-  const isOwner = user?.id === property.rent_provider_id
+  const isOwner = user?.id === property?.rent_provider_id
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -406,7 +419,7 @@ export default function PropertyDetailsPage() {
                               {review.user_profile?.full_name || 'Anonymous'}
                             </p>
                             <p className="text-sm text-gray-500">
-                              {new Date(review.created_at).toLocaleDateString()}
+                              {review.created_at ? new Date(review.created_at).toLocaleDateString() : 'N/A'}
                             </p>
                           </div>
                         </div>
@@ -476,11 +489,13 @@ export default function PropertyDetailsPage() {
                         >
                           Book Now
                         </button>
-                        <Link href={`/properties/${id}/review`}>
-                          <button className="w-full border border-primary-600 text-primary-600 py-3 rounded-lg hover:bg-primary-50 transition-colors font-medium">
-                            Leave a Review
-                          </button>
-                        </Link>
+                        {id && (
+                          <Link href={`/properties/${id}/review`}>
+                            <button className="w-full border border-primary-600 text-primary-600 py-3 rounded-lg hover:bg-primary-50 transition-colors font-medium">
+                              Leave a Review
+                            </button>
+                          </Link>
+                        )}
                         {property.contact_phone ? (
                           <a 
                             href={`tel:${property.contact_phone}`}
