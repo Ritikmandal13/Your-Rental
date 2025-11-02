@@ -1,12 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+async function sendWithNodemailer(to: string, subject: string, html: string, from: string) {
+  const nodemailer = await import('nodemailer')
+  
+  // Create transporter with Gmail SMTP
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD, // Use App Password, not regular password
+    },
+  })
+
+  const mailOptions = {
+    from: from || process.env.GMAIL_USER || 'your-rental-service@gmail.com',
+    to: to,
+    subject: subject,
+    html: html,
+  }
+
+  const info = await transporter.sendMail(mailOptions)
+  return { success: true, data: info }
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { to, subject, html, type } = body
+    const { to, subject, html } = body
 
     if (!to || !subject || !html) {
       return NextResponse.json(
@@ -15,52 +35,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!process.env.RESEND_API_KEY) {
-      console.error('RESEND_API_KEY is not set')
+    // Check if Gmail credentials are configured
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
       return NextResponse.json(
-        { error: 'Email service not configured' },
+        { error: 'Gmail credentials not configured. Please set GMAIL_USER and GMAIL_APP_PASSWORD in your .env.local file' },
         { status: 500 }
       )
     }
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Your Rental Service <onboarding@resend.dev>'
+    const fromEmail = process.env.FROM_EMAIL || `Your Rental Service <${process.env.GMAIL_USER}>`
+    const result = await sendWithNodemailer(to, subject, html, fromEmail)
 
-    const { data, error } = await resend.emails.send({
-      from: fromEmail,
-      to: [to],
-      subject,
-      html,
-    })
-
-    if (error) {
-      console.error('Resend error:', error)
-      
-      // Check if it's a domain verification error
-      if (error.message?.toLowerCase().includes('domain') || 
-          error.message?.toLowerCase().includes('verify') ||
-          error.message?.toLowerCase().includes('from')) {
-        console.warn('Domain verification required. Email not sent but booking was successful.')
-        // Return success even if email fails (optional: you can change this behavior)
-        return NextResponse.json({ 
-          success: true, 
-          warning: 'Email not sent - domain verification required. Please verify your domain in Resend dashboard.',
-          details: error.message 
-        })
-      }
-      
-      return NextResponse.json(
-        { error: 'Failed to send email', details: error },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json(result)
   } catch (error: any) {
     console.error('Email sending error:', error)
     return NextResponse.json(
-      { error: 'Internal server error', message: error.message },
+      { error: 'Failed to send email', message: error.message },
       { status: 500 }
     )
   }
 }
-

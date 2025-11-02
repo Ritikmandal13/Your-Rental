@@ -22,7 +22,7 @@ A fully functional, modern rental service website built with Next.js, TypeScript
 - **Animations**: Framer Motion
 - **Forms**: React Hook Form
 - **Notifications**: React Hot Toast
-- **Email Service**: Resend
+- **Email Service**: Nodemailer (Gmail)
 
 ## 📦 Installation
 
@@ -47,15 +47,18 @@ A fully functional, modern rental service website built with Next.js, TypeScript
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   RESEND_API_KEY=your_resend_api_key
-   RESEND_FROM_EMAIL=Your Rental Service <noreply@yourdomain.com>
+   USE_NODEMAILER=true
+   GMAIL_USER=your-email@gmail.com
+   GMAIL_APP_PASSWORD=your-16-character-app-password
+   FROM_EMAIL=Your Rental Service <your-email@gmail.com>
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
    
-   **Email Setup (Resend):**
-   - Sign up for a free account at [Resend](https://resend.com)
-   - Get your API key from the Resend dashboard
-   - Set your `RESEND_FROM_EMAIL` (must be a verified domain in Resend for production, or use `onboarding@resend.dev` for testing)
+   **Email Setup (Gmail - No Domain Needed):**
+   - Enable 2-Factor Authentication on Gmail
+   - Create App Password: https://myaccount.google.com/apppasswords
+   - Copy the 16-character app password and add to `.env.local`
+   - See `EMAIL_ALTERNATIVES_GUIDE.md` for other email service options
 
 4. **Run the development server**
    ```bash
