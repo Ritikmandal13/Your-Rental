@@ -47,6 +47,11 @@ export default function FavoritesPage() {
   }, [user, authLoading, router])
 
   const fetchFavorites = async () => {
+    if (!user?.id) {
+      setLoading(false)
+      return
+    }
+
     try {
       const { data, error } = await supabase
         .from('favorites')
@@ -68,7 +73,7 @@ export default function FavoritesPage() {
             contact_phone
           )
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -99,11 +104,13 @@ export default function FavoritesPage() {
   }
 
   const handleRemoveFavorite = async (propertyId: string) => {
+    if (!user?.id) return
+
     try {
       const { error } = await supabase
         .from('favorites')
         .delete()
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .eq('property_id', propertyId)
 
       if (error) throw error

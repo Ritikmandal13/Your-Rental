@@ -40,11 +40,16 @@ export default function NotificationsPage() {
   }, [user, authLoading, router])
 
   const fetchNotifications = async () => {
+    if (!user?.id) {
+      setLoading(false)
+      return
+    }
+
     try {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -72,11 +77,13 @@ export default function NotificationsPage() {
   }
 
   const markAllAsRead = async () => {
+    if (!user?.id) return
+
     try {
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .eq('is_read', false)
 
       if (error) throw error

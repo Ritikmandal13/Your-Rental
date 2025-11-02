@@ -73,12 +73,17 @@ export default function EditPropertyPage() {
   }, [propertyId, user])
 
   const fetchProperty = async () => {
+    if (!user?.id) {
+      router.push('/dashboard/properties')
+      return
+    }
+
     try {
       const { data, error } = await supabase
         .from('properties')
         .select('*')
         .eq('id', propertyId)
-        .eq('rent_provider_id', user?.id)
+        .eq('rent_provider_id', user.id)
         .single()
 
       if (error) throw error

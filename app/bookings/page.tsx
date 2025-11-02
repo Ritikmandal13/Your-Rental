@@ -57,6 +57,11 @@ export default function MyBookingsPage() {
   }, [user, profile, authLoading, router])
 
   const fetchBookings = async () => {
+    if (!user?.id) {
+      setLoading(false)
+      return
+    }
+
     try {
       const { data, error } = await supabase
         .from('bookings')
@@ -73,7 +78,7 @@ export default function MyBookingsPage() {
             area
           )
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (error) throw error

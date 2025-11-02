@@ -65,16 +65,18 @@ export default function ReviewPage() {
       setProperty(data)
 
       // Check if user has already reviewed this property
-      const { data: existingReview, error: reviewError } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('property_id', id)
-        .eq('user_id', user?.id)
-        .single()
+      if (user?.id) {
+        const { data: existingReview, error: reviewError } = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('property_id', id)
+          .eq('user_id', user.id)
+          .single()
 
-      if (!reviewError && existingReview) {
-        setRating(existingReview.rating)
-        setComment(existingReview.comment || '')
+        if (!reviewError && existingReview) {
+          setRating(existingReview.rating)
+          setComment(existingReview.comment || '')
+        }
       }
     } catch (error: any) {
       toast.error('Failed to fetch property details')
