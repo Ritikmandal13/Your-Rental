@@ -147,6 +147,29 @@ export default function Hero() {
     
     if (location) params.set('location', location)
     if (budget) params.set('budget', budget)
+
+    // Map selected domain ids to labels and split into domains vs interests
+    const idToLabel = new Map<string, string>()
+    domainCategories.forEach(group => group.domains.forEach(d => idToLabel.set(d.id, d.label)))
+    const professionalIds = ['tech','finance','healthcare','education','design','marketing']
+    const interestIds = ['fitness','music','reading','gaming','cooking','travel','photography','coffee']
+
+    const domainLabels = selectedDomains
+      .filter(id => professionalIds.includes(id))
+      .map(id => idToLabel.get(id)!)
+    const interestLabels = selectedDomains
+      .filter(id => interestIds.includes(id))
+      .map(id => idToLabel.get(id)!)
+
+    if (domainLabels.length) params.set('domains', domainLabels.join(','))
+    if (interestLabels.length) params.set('interests', interestLabels.join(','))
+
+    // Map amenity ids to labels
+    if (amenities.length) {
+      const amenityMap = new Map(amenityOptions.map(a => [a.id, a.label]))
+      const amenityLabels = amenities.map(id => amenityMap.get(id)!).filter(Boolean)
+      if (amenityLabels.length) params.set('amenities', amenityLabels.join(','))
+    }
     
     // Navigate to properties page with filters
     const queryString = params.toString()

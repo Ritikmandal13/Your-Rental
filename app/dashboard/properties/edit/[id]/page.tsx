@@ -11,6 +11,8 @@ import { motion } from 'framer-motion'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
+export const dynamic = 'force-dynamic'
+
 const PROPERTY_TYPES = [
   'Apartment',
   'Villa',

@@ -134,22 +134,12 @@ export default function AddPropertyPage() {
       console.log('File size:', file.size, 'bytes')
       console.log('File type:', file.type)
 
-      // Add timeout wrapper
-      const uploadPromise = supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('property-images')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         })
-
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Upload timeout after 30 seconds')), 30000)
-      })
-
-      const { error: uploadError } = await Promise.race([
-        uploadPromise,
-        timeoutPromise
-      ]) as any
 
       if (uploadError) {
         console.error('Upload error details:', uploadError)

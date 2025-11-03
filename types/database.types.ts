@@ -78,6 +78,83 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          property_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          property_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          property_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -113,6 +190,7 @@ export type Database = {
       }
       properties: {
         Row: {
+          amenities: string[] | null
           area: number
           availability_status: string | null
           bathrooms: number
@@ -123,9 +201,12 @@ export type Database = {
           featured: boolean | null
           id: string
           image_url: string
+          interests: string[] | null
           is_verified: boolean | null
+          lifestyle: string[] | null
           location: string
           price: number
+          professional_domains: string[] | null
           rating: number | null
           rent_provider_id: string | null
           title: string
@@ -133,6 +214,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          amenities?: string[] | null
           area: number
           availability_status?: string | null
           bathrooms: number
@@ -143,9 +225,12 @@ export type Database = {
           featured?: boolean | null
           id?: string
           image_url: string
+          interests?: string[] | null
           is_verified?: boolean | null
+          lifestyle?: string[] | null
           location: string
           price: number
+          professional_domains?: string[] | null
           rating?: number | null
           rent_provider_id?: string | null
           title: string
@@ -153,6 +238,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          amenities?: string[] | null
           area?: number
           availability_status?: string | null
           bathrooms?: number
@@ -163,9 +249,12 @@ export type Database = {
           featured?: boolean | null
           id?: string
           image_url?: string
+          interests?: string[] | null
           is_verified?: boolean | null
+          lifestyle?: string[] | null
           location?: string
           price?: number
+          professional_domains?: string[] | null
           rating?: number | null
           rent_provider_id?: string | null
           title?: string
@@ -178,6 +267,38 @@ export type Database = {
             columns: ["rent_provider_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_images: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          image_url: string
+          property_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          image_url: string
+          property_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_images_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]

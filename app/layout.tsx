@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   description: 'Find the perfect rental property with Smart house - your trusted rental services platform',
 }
 
+// Ensure all routes opt-out of static prerendering in dev to avoid vendor-chunk errors
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function RootLayout({
   children,
 }: {

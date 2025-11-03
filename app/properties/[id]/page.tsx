@@ -13,6 +13,8 @@ import { getBookingNotificationEmailForProvider } from '@/lib/email-templates'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 
+export const dynamic = 'force-dynamic'
+
 interface Property {
   id: string
   title: string
@@ -30,6 +32,10 @@ interface Property {
   contact_phone: string | null
   rent_provider_id: string | null
   created_at: string | null
+  professional_domains?: string[] | null
+  interests?: string[] | null
+  lifestyle?: string[] | null
+  amenities?: string[] | null
 }
 
 interface PropertyImage {
@@ -325,6 +331,55 @@ export default function PropertyDetailsPage() {
                 </div>
               )}
             </motion.div>
+
+            {/* Preferences */}
+            {(property.professional_domains?.length || property.interests?.length || property.lifestyle?.length || property.amenities?.length) && (
+              <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Preferences</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {property.professional_domains?.length ? (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">Professional Domains</p>
+                      <div className="flex flex-wrap gap-2">
+                        {property.professional_domains.map((d) => (
+                          <span key={d} className="px-3 py-1 rounded-full text-sm bg-primary-50 text-primary-700 border border-primary-200">{d}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  {property.interests?.length ? (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">Interests</p>
+                      <div className="flex flex-wrap gap-2">
+                        {property.interests.map((d) => (
+                          <span key={d} className="px-3 py-1 rounded-full text-sm bg-primary-50 text-primary-700 border border-primary-200">{d}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  {property.lifestyle?.length ? (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">Lifestyle</p>
+                      <div className="flex flex-wrap gap-2">
+                        {property.lifestyle.map((d) => (
+                          <span key={d} className="px-3 py-1 rounded-full text-sm bg-primary-50 text-primary-700 border border-primary-200">{d}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  {property.amenities?.length ? (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">Amenities</p>
+                      <div className="flex flex-wrap gap-2">
+                        {property.amenities.map((d) => (
+                          <span key={d} className="px-3 py-1 rounded-full text-sm bg-primary-50 text-primary-700 border border-primary-200">{d}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            )}
 
             {/* Details */}
             <motion.div

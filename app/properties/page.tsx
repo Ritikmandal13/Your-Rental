@@ -30,14 +30,70 @@ function AllPropertiesContent() {
   const router = useRouter()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
+  const [showFilters, setShowFilters] = useState(false)
 
   // Get filter values from URL params
   const locationFilter = searchParams.get('location')
   const propertyTypeFilter = searchParams.get('propertyType')
   const budgetFilter = searchParams.get('budget')
+  // New preference-based filters (CSV lists)
+  const parseCsv = (key: string): string[] => {
+    const v = searchParams.get(key)
+    if (!v) return []
+    return v.split(',').map(s => s.trim()).filter(Boolean)
+  }
+  const domains = parseCsv('domains')
+  const interests = parseCsv('interests')
+  const lifestyle = parseCsv('lifestyle')
+  const amenities = parseCsv('amenities')
+
+  const toPgTextArray = (vals: string[]) => {
+    const esc = (s: string) => s.split('"').join('\\"')
+    return `{${vals.map(v => '"' + esc(v) + '"').join(',')}}`
+  }
+
+  // Options (keep in sync with provider form)
+  const PROFESSIONAL_DOMAINS = [
+    'Technology','Finance','Healthcare','Education','Design & Creative','Marketing'
+  ]
+  const INTERESTS = [
+    'Fitness & Sports','Music & Arts','Reading & Writing','Gaming & Tech','Cooking & Food','Travel & Adventure','Photography','Coffee Culture'
+  ]
+  const LIFESTYLES = ['Early Riser','Night Owl','Vegan','Vegetarian','Smoker','Non-Smoker']
+  const AMENITIES = ['High-Speed WiFi','Air Conditioning','Fully Equipped Kitchen','Laundry Facilities','Gym/Fitness Center','Parking Space','24/7 Security','Cleaning Service','Furnished','Pet Friendly']
+
+  // Local UI state (initialized from URL)
+  const [selDomains, setSelDomains] = useState<string[]>(domains)
+  const [selInterests, setSelInterests] = useState<string[]>(interests)
+  const [selLifestyle, setSelLifestyle] = useState<string[]>(lifestyle)
+  const [selAmenities, setSelAmenities] = useState<string[]>(amenities)
+
+  const toggle = (list: string[], value: string, setter: (v: string[]) => void) => {
+    setter(list.includes(value) ? list.filter(v => v !== value) : [...list, value])
+  }
+
+  const applyFilters = () => {
+    const params = new URLSearchParams()
+    if (locationFilter) params.set('location', locationFilter)
+    if (propertyTypeFilter) params.set('propertyType', propertyTypeFilter)
+    if (budgetFilter) params.set('budget', budgetFilter)
+    if (selDomains.length) params.set('domains', selDomains.join(','))
+    if (selInterests.length) params.set('interests', selInterests.join(','))
+    if (selLifestyle.length) params.set('lifestyle', selLifestyle.join(','))
+    if (selAmenities.length) params.set('amenities', selAmenities.join(','))
+    router.push(`/properties?${params.toString()}`)
+  }
 
   // Count active filters
-  const activeFiltersCount = [locationFilter, propertyTypeFilter, budgetFilter].filter(Boolean).length
+  const activeFiltersCount = [
+    locationFilter,
+    propertyTypeFilter,
+    budgetFilter,
+    domains.length ? 'd' : '',
+    interests.length ? 'i' : '',
+    lifestyle.length ? 'l' : '',
+    amenities.length ? 'a' : '',
+  ].filter(Boolean).length
 
   const clearFilters = () => {
     router.push('/properties')
@@ -76,14 +132,34 @@ function AllPropertiesContent() {
           }
         }
 
+        // Preference filters (match any of selected)
+        if (domains.length) {
+          query = query.filter('professional_domains', 'ov', toPgTextArray(domains))
+        }
+        if (interests.length) {
+          query = query.filter('interests', 'ov', toPgTextArray(interests))
+        }
+        if (lifestyle.length) {
+          query = query.filter('lifestyle', 'ov', toPgTextArray(lifestyle))
+        }
+        if (amenities.length) {
+          query = query.filter('amenities', 'ov', toPgTextArray(amenities))
+        }
+
         const startTime = Date.now()
-        const { data, error } = await query.order('created_at', { ascending: false })
+        let data: any[] | null = null
+        try {
+          const res = await (query as any)
+            .order('created_at', { ascending: false })
+            .throwOnError()
+          data = res.data
+        } catch (e: any) {
+          console.error('Error fetching properties:', e?.message || e)
+        }
         const endTime = Date.now()
         console.log(`Query took ${endTime - startTime}ms, returned ${data?.length || 0} properties`)
 
-        if (error) {
-          console.error('Error fetching properties:', error)
-        } else {
+        if (data) {
           // Transform data to match PropertyCard interface
           const formattedProperties = data.map(item => ({
             id: item.id,
@@ -103,7 +179,7 @@ function AllPropertiesContent() {
           setProperties(formattedProperties)
         }
       } catch (error) {
-        console.error('Error:', error)
+        console.error('Error:', (error as any)?.message || error)
       } finally {
         setLoading(false)
       }
@@ -130,6 +206,11 @@ function AllPropertiesContent() {
           <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">
             Browse all available properties in one place
           </p>
+          <div className="mt-4">
+            <button onClick={() => setShowFilters(v => !v)} className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-primary-600 text-white hover:bg-primary-700 transition-colors">
+              <Filter className="w-4 h-4 mr-2" /> {showFilters ? 'Hide' : 'Show'} Filters
+            </button>
+          </div>
           
           {/* Active Filters */}
           {activeFiltersCount > 0 && (
@@ -152,6 +233,26 @@ function AllPropertiesContent() {
                   💰 ₹{budgetFilter.split('-').map(n => parseInt(n)).join(' - ')}
                 </span>
               )}
+              {domains.length > 0 && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-700">
+                  👔 {domains.join(', ')}
+                </span>
+              )}
+              {interests.length > 0 && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-700">
+                  🎯 {interests.join(', ')}
+                </span>
+              )}
+              {lifestyle.length > 0 && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-700">
+                  🧬 {lifestyle.join(', ')}
+                </span>
+              )}
+              {amenities.length > 0 && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-700">
+                  🏷️ {amenities.join(', ')}
+                </span>
+              )}
               <button
                 onClick={clearFilters}
                 className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
@@ -162,6 +263,53 @@ function AllPropertiesContent() {
             </div>
           )}
         </motion.div>
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="mb-10 bg-white rounded-2xl shadow p-6 space-y-6">
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-3">Amenities</p>
+              <div className="flex flex-wrap gap-2">
+                {AMENITIES.map(opt => (
+                  <button key={opt} type="button" onClick={() => toggle(selAmenities, opt, setSelAmenities)} className={`${selAmenities.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-3 py-1.5 text-sm transition-colors`}>{opt}</button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-3">Professional Domains</p>
+              <div className="flex flex-wrap gap-2">
+                {PROFESSIONAL_DOMAINS.map(opt => (
+                  <button key={opt} type="button" onClick={() => toggle(selDomains, opt, setSelDomains)} className={`${selDomains.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-3 py-1.5 text-sm transition-colors`}>{opt}</button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-3">Interests</p>
+              <div className="flex flex-wrap gap-2">
+                {INTERESTS.map(opt => (
+                  <button key={opt} type="button" onClick={() => toggle(selInterests, opt, setSelInterests)} className={`${selInterests.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-3 py-1.5 text-sm transition-colors`}>{opt}</button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-3">Lifestyle</p>
+              <div className="flex flex-wrap gap-2">
+                {LIFESTYLES.map(opt => (
+                  <button key={opt} type="button" onClick={() => toggle(selLifestyle, opt, setSelLifestyle)} className={`${selLifestyle.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-3 py-1.5 text-sm transition-colors`}>{opt}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-right">
+              <button onClick={applyFilters} className="inline-flex items-center px-5 py-2 rounded-xl bg-primary-600 text-white hover:bg-primary-700 transition-colors">
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Properties Grid */}
         {loading ? (
