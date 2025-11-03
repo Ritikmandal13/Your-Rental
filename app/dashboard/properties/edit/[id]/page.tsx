@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
-import { ArrowLeft, Upload, X, Loader2 } from 'lucide-react'
+import { ArrowLeft, Upload, X, Loader2, Tag } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -35,6 +35,10 @@ interface Property {
   contact_phone: string | null
   availability_status: string | null
   rent_provider_id: string
+  professional_domains?: string[] | null
+  interests?: string[] | null
+  lifestyle?: string[] | null
+  amenities?: string[] | null
 }
 
 export default function EditPropertyPage() {
@@ -66,6 +70,26 @@ export default function EditPropertyPage() {
   const [imagePreview, setImagePreview] = useState<string>('')
   const [originalImageUrl, setOriginalImageUrl] = useState<string>('')
   const [deleteOldImage, setDeleteOldImage] = useState(false)
+
+  // Preference options
+  const PROFESSIONAL_DOMAINS = [
+    'Technology','Finance','Healthcare','Education','Design & Creative','Marketing'
+  ]
+  const INTERESTS = [
+    'Fitness & Sports','Music & Arts','Reading & Writing','Gaming & Tech','Cooking & Food','Travel & Adventure','Photography','Coffee Culture'
+  ]
+  const LIFESTYLES = ['Early Riser','Night Owl','Vegan','Vegetarian','Smoker','Non-Smoker']
+  const AMENITIES = ['High-Speed WiFi','Air Conditioning','Fully Equipped Kitchen','Laundry Facilities','Gym/Fitness Center','Parking Space','24/7 Security','Cleaning Service','Furnished','Pet Friendly']
+
+  // Selected preferences
+  const [selectedDomains, setSelectedDomains] = useState<string[]>([])
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([])
+  const [selectedLifestyle, setSelectedLifestyle] = useState<string[]>([])
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
+
+  const toggleInList = (list: string[], value: string, setter: (v: string[]) => void) => {
+    setter(list.includes(value) ? list.filter(v => v !== value) : [...list, value])
+  }
 
   useEffect(() => {
     if (propertyId && typeof propertyId === 'string') {
@@ -115,6 +139,12 @@ export default function EditPropertyPage() {
 
       setOriginalImageUrl(property.image_url)
       setImagePreview(property.image_url)
+
+      // Load preferences
+      setSelectedDomains(property.professional_domains || [])
+      setSelectedInterests(property.interests || [])
+      setSelectedLifestyle(property.lifestyle || [])
+      setSelectedAmenities(property.amenities || [])
     } catch (error: any) {
       console.error('Error:', error)
       toast.error('Failed to load property')
@@ -287,6 +317,10 @@ export default function EditPropertyPage() {
           image_url: imageUrl,
           contact_phone: formData.contact_phone,
           availability_status: formData.availability_status,
+          professional_domains: selectedDomains as any,
+          interests: selectedInterests as any,
+          lifestyle: selectedLifestyle as any,
+          amenities: selectedAmenities as any,
         })
         .eq('id', propertyId)
 
@@ -567,6 +601,51 @@ export default function EditPropertyPage() {
                   />
                 </label>
               )}
+            </div>
+
+            {/* Preferences */}
+            <div className="pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                <Tag className="w-5 h-5 mr-2 text-primary-600" /> Preferences
+              </h3>
+
+              <div className="space-y-6">
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Professional Domains</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {PROFESSIONAL_DOMAINS.map(opt => (
+                      <button key={opt} type="button" onClick={() => toggleInList(selectedDomains, opt, setSelectedDomains)} className={`${selectedDomains.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-4 py-2 text-sm transition-colors text-left`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Lifestyle & Interests</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {INTERESTS.map(opt => (
+                      <button key={opt} type="button" onClick={() => toggleInList(selectedInterests, opt, setSelectedInterests)} className={`${selectedInterests.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-4 py-2 text-sm transition-colors text-left`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Lifestyle</p>
+                  <div className="flex flex-wrap gap-2">
+                    {LIFESTYLES.map(opt => (
+                      <button key={opt} type="button" onClick={() => toggleInList(selectedLifestyle, opt, setSelectedLifestyle)} className={`${selectedLifestyle.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-4 py-2 text-sm transition-colors`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Amenities</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {AMENITIES.map(opt => (
+                      <button key={opt} type="button" onClick={() => toggleInList(selectedAmenities, opt, setSelectedAmenities)} className={`${selectedAmenities.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-4 py-2 text-sm transition-colors text-left`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Submit Buttons */}

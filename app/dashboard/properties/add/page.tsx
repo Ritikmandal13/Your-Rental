@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
-import { ArrowLeft, Upload, X, Loader2, Plus, Home, MapPin, Bed, Bath, Square, DollarSign, Phone, FileText } from 'lucide-react'
+import { ArrowLeft, Upload, X, Loader2, Plus, Home, MapPin, Bed, Bath, Square, DollarSign, Phone, FileText, Tag } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -43,6 +43,26 @@ export default function AddPropertyPage() {
   // Images state
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+
+  // Preference options
+  const PROFESSIONAL_DOMAINS = [
+    'Technology','Finance','Healthcare','Education','Design & Creative','Marketing'
+  ]
+  const INTERESTS = [
+    'Fitness & Sports','Music & Arts','Reading & Writing','Gaming & Tech','Cooking & Food','Travel & Adventure','Photography','Coffee Culture'
+  ]
+  const LIFESTYLES = ['Early Riser','Night Owl','Vegan','Vegetarian','Smoker','Non-Smoker']
+  const AMENITIES = ['High-Speed WiFi','Air Conditioning','Fully Equipped Kitchen','Laundry Facilities','Gym/Fitness Center','Parking Space','24/7 Security','Cleaning Service','Furnished','Pet Friendly']
+
+  // Selected preferences
+  const [selectedDomains, setSelectedDomains] = useState<string[]>([])
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([])
+  const [selectedLifestyle, setSelectedLifestyle] = useState<string[]>([])
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
+
+  const toggleInList = (list: string[], value: string, setter: (v: string[]) => void) => {
+    setter(list.includes(value) ? list.filter(v => v !== value) : [...list, value])
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -198,7 +218,12 @@ export default function AddPropertyPage() {
           availability_status: 'available',
           rating: 4.5,
           is_verified: false,
-          featured: false
+          featured: false,
+          // Preference arrays (columns must exist in DB)
+          professional_domains: selectedDomains as any,
+          interests: selectedInterests as any,
+          lifestyle: selectedLifestyle as any,
+          amenities: selectedAmenities as any
         })
         .select()
 
@@ -450,6 +475,84 @@ export default function AddPropertyPage() {
                 />
               </div>
             </div>
+
+          {/* Preferences Section */}
+          <div className="border-b border-gray-200 pb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <Tag className="w-5 h-5 mr-2 text-primary-600" />
+              Preferences (for better matching)
+            </h2>
+
+            <div className="space-y-6">
+              {/* Professional Domains */}
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-3">Professional Domains</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {PROFESSIONAL_DOMAINS.map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => toggleInList(selectedDomains, opt, setSelectedDomains)}
+                      className={`${selectedDomains.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-4 py-2 text-sm transition-colors text-left`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Interests */}
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-3">Lifestyle & Interests</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {INTERESTS.map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => toggleInList(selectedInterests, opt, setSelectedInterests)}
+                      className={`${selectedInterests.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-4 py-2 text-sm transition-colors text-left`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lifestyle */}
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-3">Lifestyle</p>
+                <div className="flex flex-wrap gap-2">
+                  {LIFESTYLES.map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => toggleInList(selectedLifestyle, opt, setSelectedLifestyle)}
+                      className={`${selectedLifestyle.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-4 py-2 text-sm transition-colors`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Amenities */}
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-3">Amenities</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {AMENITIES.map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => toggleInList(selectedAmenities, opt, setSelectedAmenities)}
+                      className={`${selectedAmenities.includes(opt) ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-800'} border border-gray-300 hover:border-primary-500 rounded-lg px-4 py-2 text-sm transition-colors text-left`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
             {/* Images Upload Section */}
             <div className="pb-6">
