@@ -93,7 +93,7 @@ export function getBookingNotificationEmailForProvider(data: {
             
             <p style="font-size: 14px; color: #666; margin-top: 20px;">
               Best regards,<br>
-              Your Rental Service Team
+              Smart house: your rental services Team
             </p>
           </div>
         </body>
@@ -189,7 +189,7 @@ export function getBookingConfirmationEmailForUser(data: {
             
             <p style="font-size: 14px; color: #666; margin-top: 20px;">
               We look forward to serving you!<br>
-              <strong>Your Rental Service Team</strong>
+              <strong>Smart house: your rental services Team</strong>
             </p>
           </div>
         </body>

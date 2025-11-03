@@ -55,8 +55,8 @@ export default function Header() {
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <Home className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <span className="text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">Your Rental Service</span>
-            <span className="text-lg font-bold text-gray-900 sm:hidden">YRS</span>
+            <span className="text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">Smart house: your rental services</span>
+            <span className="text-lg font-bold text-gray-900 sm:hidden">Smart house</span>
           </Link>
 
           {/* Desktop Navigation */}

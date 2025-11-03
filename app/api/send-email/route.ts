@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const fromEmail = process.env.FROM_EMAIL || `Your Rental Service <${process.env.GMAIL_USER}>`
+    const fromEmail = process.env.FROM_EMAIL || `Smart house: your rental services <${process.env.GMAIL_USER}>`
     const result = await sendWithNodemailer(to, subject, html, fromEmail)
 
     return NextResponse.json(result)

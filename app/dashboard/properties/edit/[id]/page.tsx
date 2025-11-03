@@ -65,6 +65,7 @@ export default function EditPropertyPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
   const [originalImageUrl, setOriginalImageUrl] = useState<string>('')
+  const [deleteOldImage, setDeleteOldImage] = useState(false)
 
   useEffect(() => {
     if (propertyId && typeof propertyId === 'string') {
@@ -189,6 +190,53 @@ export default function EditPropertyPage() {
     }
   }
 
+  const deleteImageFromStorage = async (imageUrl: string) => {
+    try {
+      if (!imageUrl) return
+      
+      // Extract file path from URL
+      // Supabase storage URLs format: https://[project].supabase.co/storage/v1/object/public/property-images/properties/filename
+      // Or: https://[project].supabase.co/storage/v1/object/sign/property-images/properties/filename?token=...
+      let filePath = ''
+      
+      // Try to extract from public URL
+      const publicUrlMatch = imageUrl.match(/\/property-images\/(.+)$/)
+      if (publicUrlMatch) {
+        filePath = publicUrlMatch[1].split('?')[0] // Remove query params if any
+      } else {
+        // Try to extract from signed URL or other formats
+        const signedUrlMatch = imageUrl.match(/property-images\/([^?]+)/)
+        if (signedUrlMatch) {
+          filePath = signedUrlMatch[1]
+        }
+      }
+      
+      if (filePath) {
+        const { error } = await supabase.storage
+          .from('property-images')
+          .remove([filePath])
+        
+        if (error) {
+          console.error('Error deleting old image:', error)
+          // Don't throw - continue even if deletion fails
+        } else {
+          console.log('Old image deleted successfully:', filePath)
+        }
+      } else {
+        console.warn('Could not extract file path from URL:', imageUrl)
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error)
+      // Continue even if deletion fails
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null)
+    setImagePreview('')
+    setDeleteOldImage(true)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -204,6 +252,11 @@ export default function EditPropertyPage() {
 
       // Upload new image if selected
       if (selectedImage) {
+        // Delete old image from storage when replacing with new image
+        if (originalImageUrl) {
+          await deleteImageFromStorage(originalImageUrl)
+        }
+        
         const newImageUrl = await uploadImageToSupabase(selectedImage)
         
         if (!newImageUrl) {
@@ -211,7 +264,13 @@ export default function EditPropertyPage() {
           return
         }
         imageUrl = newImageUrl
+      } else if (deleteOldImage) {
+        // User clicked remove but didn't upload new image
+        toast.error('Please upload a new image. Image is required.')
+        setLoading(false)
+        return
       }
+      // If neither selectedImage nor deleteOldImage, keep the original image
 
       // Update property
       const { error } = await supabase
@@ -461,16 +520,35 @@ export default function EditPropertyPage() {
                     alt="Preview"
                     className="w-full h-full object-cover"
                   />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedImage(null)
-                      setImagePreview(originalImageUrl)
-                    }}
-                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="absolute top-2 right-2 flex gap-2">
+                    {selectedImage && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedImage(null)
+                          setImagePreview(originalImageUrl)
+                          setDeleteOldImage(false)
+                        }}
+                        className="p-2 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 transition-colors"
+                        title="Cancel new image"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      title="Remove image"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {deleteOldImage && (
+                    <div className="absolute bottom-2 left-2 bg-red-500 text-white px-3 py-1 rounded text-sm font-medium">
+                      Image will be removed
+                    </div>
+                  )}
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 transition-colors">

@@ -58,7 +58,7 @@ export default function Footer() {
               <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary-600 rounded-lg flex items-center justify-center">
                 <Home className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-              <span className="text-lg sm:text-xl font-bold">Your Rental Service</span>
+              <span className="text-lg sm:text-xl font-bold">Smart house: your rental services</span>
             </Link>
             <p className="text-gray-400 mb-3 sm:mb-4 text-sm sm:text-base">
               Your trusted partner in finding the perfect rental property. We connect you with verified properties and provide comprehensive rental services.
@@ -174,7 +174,7 @@ export default function Footer() {
         <div className="border-t border-gray-800 pt-6 sm:pt-8">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <div className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-0">
-              © 2024 Your Rental Service. All rights reserved.
+              © 2024 Smart house: your rental services. All rights reserved.
             </div>
             
             {/* Social Links */}
